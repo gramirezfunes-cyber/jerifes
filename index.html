@@ -225,7 +225,8 @@ async function initCloud(){
 /* ---------- voz ---------- */
 let tts=null,dict=null,dh=null;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-function pickVoice(){if(!('speechSynthesis' in window))return null;const vs=speechSynthesis.getVoices(),a=set().accent;
+const NOVELTY=/Albert|Bad News|Bahh|Bells|Boing|Bubbles|Buenas|Cellos|Fred|Jester|Junior|Organ|Ralph|Superstar|Trinoids|Whisper|Wobble|Zarvox|Grandma|Grandpa|Rocko|Kathy|Good News|Deranged|Hysterical|Pipe/i;
+function pickVoice(){if(!('speechSynthesis' in window))return null;const vs=speechSynthesis.getVoices().filter(v=>!NOVELTY.test(v.name)),a=set().accent;
   return vs.find(v=>v.lang.replace('_','-')===a&&/Google|Natural|Samantha|Daniel|Aria|Jenny|Libby|Sonia/i.test(v.name))||vs.find(v=>v.lang.replace('_','-')===a)||vs.find(v=>/^en/i.test(v.lang))||null}
 if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}
 function speak(text,rate){rate=rate||set().rate;return new Promise(res=>{
