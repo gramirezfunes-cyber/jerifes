@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spelling Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm, warm, predictable — a patient tutor for a 12-year-old with ADHD/ASD.
+   IDEA: a school spelling notebook with letter tiles; one task per page.
+   PICTURE: the word itself, huge, in letter tiles; the 5-step route as a path.
+   COLOUR and TYPE: notebook blue band, sunflower support, teal for success, amber for "almost". Lexend UI + Andika words.
+   LAYOUT: top band with nav; single centered column; big 56px targets; no clutter during practice. */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#0f121a);--ink:light-dark(#172036,#eef1f8);--mut:light-dark(#566078,#a6aec2);--line:light-dark(#e2e6f0,#283041);--card:light-dark(#f4f6fc,#171c28);
+--blue:light-dark(#2847d4,#8aa3ff);--band:light-dark(#2847d4,#18256b);--sun:#ffcd3c;
+--ok:light-dark(#0b8a79,#4cd6c0);--okBg:light-dark(#e2f5f1,#11312d);--al:light-dark(#a85f00,#ffbf5e);--alBg:light-dark(#fff2d9,#382810);--r:18px}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{font-size:16px}html.big{font-size:19px}
+body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.55 Lexend,system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{background:var(--band);color:#fff;padding:12px max(4vw,14px)}
+.top .in{max-width:1000px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:10px;align-items:center;font-weight:700;font-size:1.15rem;background:none;border:0;color:#fff;cursor:pointer;padding:6px 0}
+.brand svg{width:34px;height:34px}
+nav{display:flex;flex-wrap:wrap;gap:6px}
+nav button{background:transparent;border:2px solid transparent;color:#fff;border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:500;min-height:44px}
+nav button[aria-current=true]{background:#fff;color:#1b2b8f}
+nav button:hover{border-color:#ffffff66}
+.status{font-size:.8rem;opacity:.85;width:100%;text-align:right;max-width:1000px;margin:2px auto 0}
+main{max-width:1000px;margin:0 auto;padding:clamp(20px,4vw,44px) max(4vw,14px) 80px}
+h1{font-size:clamp(1.9rem,4.5vw,2.8rem);line-height:1.08;margin:0 0 .3em;text-wrap:balance}
+h2{font-size:1.45rem;line-height:1.2;margin:1.6em 0 .6em}
+h3{font-size:1.1rem;margin:0 0 .3em}
+p{margin:.3em 0 .8em}
+.mut{color:var(--mut)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:10px 22px;border-radius:14px;border:2px solid var(--blue);background:var(--blue);color:light-dark(#fff,#0b1022);font-weight:600;cursor:pointer;text-decoration:none;font-size:1.05rem}
+.btn.ghost{background:transparent;color:var(--blue)}
+.btn.soft{background:var(--card);border-color:var(--line);color:var(--ink)}
+.btn.sun{background:var(--sun);border-color:var(--sun);color:#2a2000}
+.btn.danger{background:transparent;border-color:var(--al);color:var(--al)}
+.btn.xl{min-height:64px;font-size:1.2rem;padding:12px 30px}
+.btn svg{width:24px;height:24px;flex:none}
+.btn:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.hero{display:grid;gap:24px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;margin-bottom:10px}
+@media(max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}}
+.paper{background:var(--card);border-radius:22px;border:1px solid var(--line);padding:22px;background-image:repeating-linear-gradient(transparent 0 33px,light-dark(#d7def3,#252c40) 33px 34px);background-position:0 12px}
+.tiles{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:Andika,Lexend,sans-serif;font-size:1.15rem;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:6px 14px;cursor:pointer;min-height:44px}
+.chip:hover{border-color:var(--blue)}
+.route{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.route li{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:10px 14px}
+.route .n{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--card);border:2px solid var(--line)}
+.route li.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.route li.next{border-color:var(--blue)}
+.route li.next .n{background:var(--blue);border-color:var(--blue);color:#fff}
+.pct{font-weight:600;color:var(--mut);white-space:nowrap}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));margin:18px 0}
+.stat{background:var(--card);border-radius:16px;padding:14px 16px;border:1px solid var(--line)}
+.stat b{display:block;font-size:clamp(1.6rem,4vw,2.1rem);line-height:1.1}
+.skill{display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;background:var(--bg);border:2px solid var(--line);border-radius:var(--r);padding:18px;min-height:150px}
+.skill:hover{border-color:var(--blue)}
+.skill .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--card);color:var(--blue)}
+.skill .ic svg{width:28px;height:28px}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:auto}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+label{font-weight:600;display:block;margin:14px 0 6px}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;font-size:16px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg)}
+textarea{min-height:200px;font-family:Andika,Lexend,sans-serif;font-size:1.1rem;line-height:1.6}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none}
+.hint{font-size:.88rem;color:var(--mut);font-weight:400}
+/* practice */
+.runbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots i{width:16px;height:16px;border-radius:50%;background:var(--line);display:block}
+.dots i.ok{background:var(--ok)}.dots i.no{background:var(--al)}.dots i.cur{background:var(--blue);outline:3px solid light-dark(#c8d3ff,#2f3f8f)}
+.stage{max-width:680px;margin:0 auto;text-align:center}
+.ins{font-size:1.25rem;font-weight:500;margin:0 0 18px}
+.word{font-family:Andika,Lexend,sans-serif;font-size:clamp(2.6rem,10vw,4.6rem);font-weight:700;line-height:1.1;letter-spacing:.04em;margin:10px 0 18px;overflow-wrap:anywhere}
+.letters{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:8px 0 18px}
+.letters span{font-family:Andika,sans-serif;font-size:clamp(1.6rem,6vw,2.4rem);min-width:1.6em;padding:4px 6px;border-radius:10px;background:var(--card);border:2px solid var(--line);font-weight:700}
+.letters span.ok{background:var(--okBg);border-color:var(--ok);color:var(--ok)}
+.letters span.miss{background:var(--alBg);border-color:var(--al);color:var(--al)}
+.audio{width:120px;height:120px;border-radius:50%;border:0;background:var(--blue);color:#fff;cursor:pointer;display:inline-grid;place-items:center;margin:4px auto 12px}
+.audio svg{width:56px;height:56px}
+.audio.mic{background:var(--sun);color:#2a2000}
+.audio.on{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.opts{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));margin-top:10px}
+.opt{font-family:Andika,sans-serif;font-size:1.7rem;padding:16px;border-radius:16px;border:3px solid var(--line);background:var(--bg);cursor:pointer;min-height:80px}
+.opt:hover{border-color:var(--blue)}
+.opt.ok{border-color:var(--ok);background:var(--okBg)}
+.opt.no{border-color:var(--al);background:var(--alBg);opacity:.75}
+.answer{font-family:Andika,sans-serif;font-size:clamp(1.6rem,6vw,2.2rem);text-align:center;letter-spacing:.06em;padding:14px;border-radius:16px;border:3px solid var(--line);width:100%;background:var(--bg)}
+.answer:focus{border-color:var(--blue);outline:none}
+.slots{display:flex;justify-content:center;gap:6px;margin:10px 0 4px;flex-wrap:wrap}
+.slots i{width:22px;height:4px;border-radius:2px;background:var(--line)}
+.slots i.f{background:var(--blue)}
+.fb{border-radius:16px;padding:16px 18px;margin:18px 0;font-size:1.15rem;font-weight:500}
+.fb.ok{background:var(--okBg);color:var(--ok)}
+.fb.al{background:var(--alBg);color:var(--al)}
+.sentence{font-family:Andika,sans-serif;font-size:1.3rem;margin:6px 0 16px}
+.sentence mark{background:light-dark(#fff0b8,#4a3d0f);color:inherit;border-radius:6px;padding:0 4px}
+.pop{animation:pop .45s ease-out}
+@keyframes pop{0%{transform:scale(.8);opacity:0}100%{transform:none;opacity:1}}
+.calm *,.calm *::before{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--mut);font-size:.85rem}
+td.c{text-align:center}
+.lv{display:inline-block;width:24px;height:24px;border-radius:7px;vertical-align:middle;border:2px solid var(--line)}
+.lv.m{background:var(--ok);border-color:var(--ok)}.lv.p{background:var(--sun);border-color:var(--sun)}.lv.x{background:var(--alBg);border-color:var(--al)}
+.wd{font-family:Andika,sans-serif;font-size:1.1rem}
+.scroll{overflow-x:auto}
+details{border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:8px 0;background:var(--bg)}
+summary{cursor:pointer;font-weight:500}
+.empty{text-align:center;padding:36px 20px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:12px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90vw;z-index:9}
+.toast.on{opacity:1}
+.switch{display:flex;gap:12px;align-items:center;font-weight:500;margin:12px 0;cursor:pointer}
+.switch input{width:24px;height:24px;accent-color:var(--blue)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mut)}.stack td:empty{display:none}.audio{width:100px;height:100px}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<header class="top">
+  <div class="in">
+    <button class="brand" data-a="nav" data-v="home" aria-label="Inicio">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="7" width="20" height="24" rx="5" fill="#ffcd3c"/><rect x="17" y="11" width="20" height="24" rx="5" fill="#fff"/><text x="27" y="29" text-anchor="middle" font-family="Andika,sans-serif" font-weight="700" font-size="16" fill="#2847d4">Aa</text></svg>
+      Spelling Coach
+    </button>
+    <nav aria-label="Secciones">
+      <button data-a="nav" data-v="home">Inicio</button>
+      <button data-a="nav" data-v="lists">Mis listas</button>
+      <button data-a="nav" data-v="progress">Progreso</button>
+      <button data-a="nav" data-v="settings">Ajustes</button>
+    </nav>
+  </div>
+  <div class="status" id="status">Guardado en este dispositivo</div>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+{
+/* ---------- utilidades ---------- */
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const norm=s=>String(s||'').toLowerCase().replace(/[’`]/g,"'").replace(/[^a-z' -]/g,'').replace(/\s+/g,' ').trim();
+const today=()=>new Date().toISOString().slice(0,10);
+const dayKey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fmtDate=t=>new Date(t).toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'});
+const fmtDay=s=>{if(!s)return'';const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('es',{day:'numeric',month:'long',year:'numeric'})};
+function lev(a,b){const D=[];for(let i=0;i<=a.length;i++){D[i]=[i];for(let j=1;j<=b.length;j++)D[i][j]=i?Math.min(D[i-1][j]+1,D[i][j-1]+1,D[i-1][j-1]+(a[i-1]===b[j-1]?0:1)):j}return D[a.length][b.length]}
+function alignMarks(ans,word){ // which letters of the correct word she got right
+  const a=ans.toLowerCase(),b=word.toLowerCase(),n=a.length,m=b.length,D=[];
+  for(let i=0;i<=n;i++){D[i]=[];for(let j=0;j<=m;j++)D[i][j]=i&&j?0:i+j}
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++)D[i][j]=Math.min(D[i-1][j]+1,D[i][j-1]+1,D[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  const ok=Array(m).fill(false);let i=n,j=m;
+  while(i>0&&j>0){if(a[i-1]===b[j-1]&&D[i][j]===D[i-1][j-1]){ok[j-1]=true;i--;j--}else if(D[i][j]===D[i-1][j-1]+1){i--;j--}else if(D[i][j]===D[i-1][j]+1)i--;else j--}
+  return ok;
+}
+const ICON={
+ ear:'<path d="M8 15a7 7 0 1 1 13.2 3.3c-.9 1.6-2.4 2.3-3.2 3.6-.8 1.4-.6 3.1-2.5 3.9-1.8.8-3.5-.4-3.5-2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 15a3 3 0 1 1 5 2.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+ book:'<path d="M4 6c4-1.5 7-1 10 1.5 3-2.5 6-3 10-1.5v17c-4-1.5-7-1-10 1.5-3-2.5-6-3-10-1.5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M14 7.5v17" stroke="currentColor" stroke-width="2.4"/>',
+ pencil:'<path d="M6 22l1.5-5L19 5.5a2.1 2.1 0 0 1 3 3L10.5 20z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M17 7.5l3 3M6 26h16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+ mic:'<rect x="10" y="3" width="8" height="14" rx="4" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M6 13a8 8 0 0 0 16 0M14 21v4M10 25h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+ star:'<path d="M14 3.5l3.2 6.6 7.2 1-5.2 5 1.3 7.2L14 19.9l-6.5 3.4 1.3-7.2-5.2-5 7.2-1z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>',
+ speak:'<path d="M4 11h4l6-5v16l-6-5H4z" fill="currentColor"/><path d="M18 10a5 5 0 0 1 0 8M21 7a9 9 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+ turtle:'<path d="M5 18c0-5 4-8 9-8s9 3 9 8z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M23 16h2.5a1.5 1.5 0 0 0 0-3H22M8 18l-1 3M19 18l1 3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/>',
+ abc:'<text x="14" y="19" text-anchor="middle" font-family="Andika,sans-serif" font-size="12" font-weight="700" fill="currentColor">a·b·c</text>',
+ back:'<path d="M17 6l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+ check:'<path d="M6 14.5l5 5L22 8.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>',
+ plus:'<path d="M14 6v16M6 14h16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+ bulb:'<path d="M10 20h8M11 24h6M14 4a7 7 0 0 0-4 12.7V20h8v-3.3A7 7 0 0 0 14 4z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>',
+ quote:'<path d="M5 7h18v11H12l-5 4v-4H5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>'
+};
+const ic=n=>`<svg viewBox="0 0 28 28" aria-hidden="true">${ICON[n]}</svg>`;
+
+/* ---------- datos ---------- */
+const LS='spellingCoach.v1';
+const DEF={name:'',perRound:5,rate:0.8,accent:'en-US',letterHints:true,sfx:true,calm:false,big:false,breaks:true,autoNext:false};
+let S={meta:{settings:{...DEF}},lists:{},sessions:{}};
+const set=()=>S.meta.settings;
+function loadLocal(){try{const r=localStorage.getItem(LS);if(r){const d=JSON.parse(r);S={meta:d.meta||{},lists:d.lists||{},sessions:d.sessions||{}}}}catch(e){}S.meta.settings={...DEF,...(S.meta.settings||{})}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+let db=null;const chains={};
+function setStatus(k){const t={local:'Guardado en este dispositivo',cloud:'Guardado en la nube · se sincroniza entre dispositivos',saving:'Guardando…',error:'No se pudo guardar en la nube (la copia local está a salvo)'};$('#status').textContent=t[k]||t.local}
+function putDoc(path,data){saveLocal();if(!db)return;setStatus('saving');const body=JSON.parse(JSON.stringify(data));
+  chains[path]=(chains[path]||Promise.resolve()).then(()=>db.doc(path).set(body)).then(()=>setStatus('cloud')).catch(e=>{console.warn(e);setStatus('error')})}
+const saveMeta=()=>{S.meta.updatedAt=Date.now();putDoc('tutor/meta',S.meta)};
+const saveList=l=>{l.updatedAt=Date.now();S.lists[l.id]=l;putDoc('lists/'+l.id,l)};
+function mergeCol(snap,name,push){const remote={};snap.docs.forEach(d=>{if(d.exists)remote[d.id]=d.data()});const local=S[name]||{},out={};
+  for(const id in remote){const r=remote[id],l=local[id];if(l&&(l.updatedAt||0)>(r.updatedAt||0)){out[id]=l;push.push([name+'/'+id,l])}else out[id]=structuredClone(r)}
+  for(const id in local)if(!remote[id]){out[id]=local[id];push.push([name+'/'+id,local[id]])}
+  S[name]=out}
+async function initCloud(){
+  if(!window.claude||!window.claude.use)return;
+  try{
+    const d=await window.claude.use('db');if(!d)return;
+    let timer;const to=new Promise((_,rej)=>{timer=setTimeout(()=>rej(new Error('timeout')),10000)});
+    const [m,ls,ss]=await Promise.race([Promise.all([d.doc('tutor/meta').get(),d.collection('lists').get(),d.collection('sessions').get()]),to]);
+    clearTimeout(timer);db=d;const push=[];
+    if(m.exists){const rm=m.data();if((rm.updatedAt||0)>=(S.meta.updatedAt||0))S.meta={...structuredClone(rm),settings:{...DEF,...(rm.settings||{})}};else push.push(['tutor/meta',S.meta])}
+    else if(S.meta.updatedAt)push.push(['tutor/meta',S.meta]);
+    mergeCol(ls,'lists',push);mergeCol(ss,'sessions',push);
+    saveLocal();setStatus('cloud');push.forEach(([p,v])=>putDoc(p,v));
+    applyLook();if(view.name!=='run')render();
+  }catch(e){console.warn('cloud',e);setStatus('local')}
+}
+
+/* ---------- voz ---------- */
+let tts=null,dict=null,dh=null;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function pickVoice(){if(!('speechSynthesis' in window))return null;const vs=speechSynthesis.getVoices(),a=set().accent;
+  return vs.find(v=>v.lang.replace('_','-')===a&&/Google|Natural|Samantha|Daniel|Aria|Jenny|Libby|Sonia/i.test(v.name))||vs.find(v=>v.lang.replace('_','-')===a)||vs.find(v=>/^en/i.test(v.lang))||null}
+if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}
+function speak(text,rate){rate=rate||set().rate;return new Promise(res=>{
+  const v=pickVoice();
+  if(v){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.rate=rate;u.onend=u.onerror=()=>res();speechSynthesis.speak(u);setTimeout(res,9000);return}catch(e){}}
+  if(tts){tts.speak(text,{language:'en',rate:Math.max(.7,Math.min(1.5,rate))}).then(res,res);return}
+  if(!speak.warned){speak.warned=1;toast('Este navegador no tiene voz en inglés. Prueba con Chrome o Edge.')}res()})}
+const spellOut=w=>speak(w.split('').filter(c=>c!==' ').join(', '),0.7);
+function canListen(){return !!dict||!!SR}
+function listen(){return new Promise((resolve,reject)=>{
+  if(dict){let txt='',t;dh={final:x=>{txt+=' '+x;dict.stop().catch(()=>{})},state:s=>{if(s==='idle'){clearTimeout(t);dh=null;resolve([txt.trim()])}}};
+    dict.start().catch(e=>{dh=null;reject(e)});t=setTimeout(()=>dict.stop().catch(()=>{}),7000);return}
+  if(SR){const r=new SR();r.lang=set().accent;r.maxAlternatives=5;r.interimResults=false;let got=false;
+    r.onresult=e=>{got=true;resolve([...e.results[0]].map(x=>x.transcript))};r.onerror=e=>reject(e.error||'error');r.onend=()=>{if(!got)resolve([])};r.start();return}
+  reject('unsupported')})}
+async function initVoice(){if(!window.claude||!window.claude.use)return;
+  try{tts=await window.claude.use('tts')}catch(e){}
+  try{dict=await window.claude.use('dictation');if(dict){dict.onFinal(({text})=>dh&&dh.final(text));dict.onState(({state})=>dh&&dh.state(state))}}catch(e){}
+  if(view.name==='run'&&R&&R.mode==='speak')render()}
+let AC;function chime(ok){if(!set().sfx)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime;(ok?[523,659,784]:[440,392]).forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;const s=t+i*.1;g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(ok?.12:.06,s+.02);g.gain.exponentialRampToValueAtTime(.001,s+.4);o.connect(g).connect(AC.destination);o.start(s);o.stop(s+.45)})}catch(e){}}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2600)}
+
+/* ---------- lógica de spelling ---------- */
+const SK={
+ listen:{t:'Escuchar',en:'Listening',d:'Escucha la palabra y elige cómo se escribe.',ic:'ear'},
+ read:{t:'Leer',en:'Reading',d:'Lee la palabra en voz alta y comprueba con el audio.',ic:'book'},
+ write:{t:'Escribir',en:'Writing',d:'Escucha la palabra y escríbela letra por letra.',ic:'pencil'},
+ speak:{t:'Pronunciar',en:'Speaking',d:'Escucha el modelo y di la palabra en inglés.',ic:'mic'},
+ test:{t:'Ensayo de examen',en:'Spelling test',d:'Dictado de toda la lista, como en clase. Sin pistas.',ic:'star'}};
+const ROUTE=['listen','read','write','speak','test'];
+function parseWords(txt){let lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  if(lines.length===1&&lines[0].includes(','))lines=lines[0].split(',').map(s=>s.trim()).filter(Boolean);
+  const seen=new Set(),out=[];
+  for(const ln of lines){const m=ln.replace(/^\d+[.)]\s*/,'').split(/\s+[-–—|:]\s+|\s*\|\s*/);const w=(m[0]||'').trim();const s=m.slice(1).join(' - ').trim();
+    if(!w||seen.has(w.toLowerCase()))continue;seen.add(w.toLowerCase());out.push({w,s})}
+  return out}
+function misspell(w){const V='aeiou',subs=[['ph','f'],['ck','k'],['c','k'],['k','c'],['ie','ei'],['ei','ie'],['tion','sion'],['ea','ee'],['ee','ea'],['ou','ow'],['y','i'],['wh','w'],['gh',''],['ll','l'],['ss','s'],['tt','t'],['f','ph'],['s','c'],['ai','ay'],['oa','o']];
+  const ops=[
+   s=>{if(s.length<3)return null;const i=1+rnd(s.length-2);return s.slice(0,i)+s[i+1]+s[i]+s.slice(i+2)},
+   s=>{const i=rnd(s.length);return /[a-z]/i.test(s[i])?s.slice(0,i+1)+s[i]+s.slice(i+1):null},
+   s=>/(.)\1/.test(s)?s.replace(/(.)\1/,'$1'):null,
+   s=>{const idx=[...s].map((c,i)=>V.includes(c.toLowerCase())?i:-1).filter(i=>i>=0);if(!idx.length)return null;const i=idx[rnd(idx.length)];const o=V.replace(s[i].toLowerCase(),'');return s.slice(0,i)+o[rnd(o.length)]+s.slice(i+1)},
+   s=>{if(s.length<4)return null;const i=1+rnd(s.length-2);return s.slice(0,i)+s.slice(i+1)},
+   s=>{const c=subs.filter(([a])=>s.toLowerCase().includes(a));if(!c.length)return null;const [a,b]=c[rnd(c.length)];return s.toLowerCase().replace(a,b)}];
+  const out=new Set();let g=0;while(out.size<2&&g++<80){const v=ops[rnd(ops.length)](w);if(v&&v.trim().length>1&&v.toLowerCase()!==w.toLowerCase())out.add(v)}
+  while(out.size<2)out.add(w+'e'.repeat(out.size+1));return [...out]}
+const liveLists=()=>Object.values(S.lists).filter(l=>!l.deleted).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt);
+function wordStats(listId){const m={};Object.values(S.sessions).filter(s=>s.listId===listId).sort((a,b)=>a.startedAt-b.startedAt).forEach(s=>{
+  (s.results||[]).forEach(r=>{const k=r.w.toLowerCase();m[k]=m[k]||{};const o=m[k][s.mode]=m[k][s.mode]||{n:0,ok:0,last:null};o.n++;if(r.ok)o.ok++;o.last=r.ok})});return m}
+function mastery(L,sk,st){st=st||wordStats(L.id);if(!L.words.length)return 0;return Math.round(100*L.words.filter(w=>st[w.w.toLowerCase()]?.[sk]?.last).length/L.words.length)}
+function hardWords(L){const st=wordStats(L.id);return L.words.filter(w=>{const o=st[w.w.toLowerCase()];return o&&Object.values(o).some(x=>x.last===false)})}
+function streak(){const days=new Set(Object.values(S.sessions).map(s=>dayKey(s.startedAt)));let n=0;const d=new Date();if(!days.has(dayKey(d)))d.setDate(d.getDate()-1);while(days.has(dayKey(d))){n++;d.setDate(d.getDate()-1)}return n}
+const stars=()=>Object.values(S.sessions).reduce((a,s)=>a+(s.score||0),0);
+
+/* ---------- vistas ---------- */
+let view={name:'home'};let R=null;let confirmDel=null;
+function go(name,extra){view={name,...extra};if(name!=='run')R=null;confirmDel=null;render();window.scrollTo(0,0)}
+function applyLook(){document.documentElement.classList.toggle('big',!!set().big);document.body.classList.toggle('calm',!!set().calm)}
+function render(){document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===view.name||(view.name==='list'&&b.dataset.v==='lists')||(view.name==='edit'&&b.dataset.v==='lists')));
+  const f={home:vHome,lists:vLists,edit:vEdit,list:vList,run:vRun,done:vDone,brk:vBreak,progress:vProgress,settings:vSettings}[view.name]||vHome;
+  $('#app').innerHTML=f();afterRender()}
+function afterRender(){const a=$('#app [autofocus]');if(a)a.focus({preventScroll:true})}
+
+function routeHtml(L,st){let nextSet=false;return `<ol class="route">${ROUTE.map((k,i)=>{const p=mastery(L,k,st);const done=p>=80;let cls=done?'done':'';if(!done&&!nextSet){cls='next';nextSet=true}
+  return `<li class="${cls}"><span class="n">${done?ic('check').replace('viewBox','width="22" height="22" viewBox'):i+1}</span><span><b>${SK[k].t}</b> <span class="mut">· ${SK[k].en}</span></span><span class="pct">${p}%</span></li>`}).join('')}</ol>`}
+function nextSkill(L,st){return ROUTE.find(k=>mastery(L,k,st)<80)||'test'}
+
+function vHome(){const L=liveLists()[0];const name=set().name;
+  if(!L)return `<section class="empty"><h1>Hola${name?', '+esc(name):''}</h1><p class="mut" style="font-size:1.15rem">Empecemos agregando la lista de palabras de esta semana.</p><p><button class="btn xl" data-a="newList">${ic('plus')} Agregar mi primera lista</button></p>${name?'':'<p class="mut">Consejo para papá o mamá: en <b>Ajustes</b> puedes poner el nombre de tu hija y ajustar la voz.</p>'}</section>`;
+  const st=wordStats(L.id),nk=nextSkill(L,st);
+  return `<div class="hero"><div><h1>Hola${name?', '+esc(name):''}</h1><p style="font-size:1.2rem">Hoy practicamos <b>${esc(L.title)}</b>. Son ${L.words.length} palabras, en rondas cortas de ${Math.min(set().perRound,L.words.length)}.</p>
+   <p><button class="btn xl" data-a="start" data-l="${L.id}" data-m="${nk}" autofocus>${ic(SK[nk].ic)} Empezar: ${SK[nk].t}</button></p>
+   <p class="mut">Siguiente paso de tu ruta. También puedes elegir otra actividad.</p><p><button class="btn ghost" data-a="list" data-id="${L.id}">Ver todas las actividades</button></p></div>
+   <div class="paper"><h3>Mi ruta para esta lista</h3>${routeHtml(L,st)}</div></div>
+   <div class="stats"><div class="stat"><b>${streak()}</b>días seguidos</div><div class="stat"><b>${stars()}</b>estrellas ganadas</div><div class="stat"><b>${Object.keys(S.sessions).length}</b>prácticas guardadas</div><div class="stat"><b>${liveLists().length}</b>listas</div></div>
+   <h2>Palabras de esta lista</h2><p class="mut">Toca una palabra para escucharla.</p><div class="tiles">${L.words.map(w=>`<button class="chip" data-a="hear" data-w="${esc(w.w)}">${esc(w.w)}</button>`).join('')}</div>`}
+
+function vLists(){const ls=liveLists();
+  return `<div class="row" style="justify-content:space-between"><h1>Mis listas</h1><button class="btn" data-a="newList">${ic('plus')} Nueva lista</button></div>
+  <p class="mut">Agrega una lista nueva cada semana (o cada día). Todas quedan guardadas con su historial.</p>
+  ${ls.length?`<div class="grid">${ls.map(L=>{const st=wordStats(L.id);const avg=Math.round(ROUTE.reduce((a,k)=>a+mastery(L,k,st),0)/ROUTE.length);
+   return `<div class="card"><h3>${esc(L.title)}</h3><p class="mut">${esc(fmtDay(L.date))} · ${L.words.length} palabras</p>
+   <p class="wd">${L.words.slice(0,6).map(w=>esc(w.w)).join(', ')}${L.words.length>6?'…':''}</p>
+   <div class="bar" title="Dominio general"><i style="width:${avg}%"></i></div><p class="mut" style="font-size:.85rem">Dominio general: ${avg}%</p>
+   <div class="row"><button class="btn" data-a="list" data-id="${L.id}">Practicar</button><button class="btn soft" data-a="editList" data-id="${L.id}">Editar</button>
+   ${confirmDel===L.id?`<button class="btn danger" data-a="delList" data-id="${L.id}">¿Seguro? Borrar</button>`:`<button class="btn soft" data-a="askDel" data-id="${L.id}">Borrar</button>`}</div></div>`}).join('')}</div>`
+  :`<div class="card empty"><p>Todavía no hay listas.</p><button class="btn" data-a="newList">${ic('plus')} Crear la primera</button></div>`}`}
+
+function vEdit(){const L=view.id?S.lists[view.id]:null;const txt=L?L.words.map(w=>w.s?w.w+' - '+w.s:w.w).join('\n'):'';
+  return `<h1>${L?'Editar lista':'Nueva lista de palabras'}</h1><p class="mut">Escribe una palabra por línea. Si quieres, agrega una frase de ejemplo después de un guion: <span class="wd">because - I stayed home because it rained.</span></p>
+  <form id="listForm" class="card" style="max-width:720px">
+   <label for="lt">Nombre de la lista</label><input type="text" id="lt" name="title" required value="${esc(L?L.title:'Spelling · '+fmtDay(today()))}">
+   <label for="ld">Fecha</label><input type="date" id="ld" name="date" value="${esc(L?L.date:today())}">
+   <label for="lw">Palabras en inglés <span class="hint">(una por línea, o separadas por comas)</span></label>
+   <textarea id="lw" name="words" required placeholder="friend&#10;because - I am happy because it is Friday.&#10;beautiful&#10;library" ${L?'':'autofocus'}>${esc(txt)}</textarea>
+   <p id="prev" class="mut">${L?L.words.length+' palabras':'0 palabras'}</p>
+   <div class="row" style="margin-top:12px"><button class="btn" type="submit">${ic('check')} Guardar lista</button><button class="btn soft" type="button" data-a="nav" data-v="lists">Cancelar</button></div>
+  </form>`}
+
+function vList(){const L=S.lists[view.id];if(!L||L.deleted)return vLists();const st=wordStats(L.id);const hard=hardWords(L);
+  return `<button class="btn soft" data-a="nav" data-v="lists">${ic('back')} Mis listas</button>
+  <h1 style="margin-top:18px">${esc(L.title)}</h1><p class="mut">${esc(fmtDay(L.date))} · ${L.words.length} palabras · toca una palabra para escucharla</p>
+  <div class="tiles" style="margin-bottom:22px">${L.words.map(w=>`<button class="chip" data-a="hear" data-w="${esc(w.w)}">${esc(w.w)}</button>`).join('')}</div>
+  <h2>Elige una actividad</h2><div class="grid">${ROUTE.map((k,i)=>{const p=mastery(L,k,st);return `<button class="skill" data-a="start" data-l="${L.id}" data-m="${k}"><span class="row"><span class="ic">${ic(SK[k].ic)}</span><span><b>${i+1}. ${SK[k].t}</b><br><span class="mut">${SK[k].en}</span></span></span><span class="mut">${SK[k].d}</span><span class="bar"><i style="width:${p}%"></i></span><span class="mut" style="font-size:.85rem">Dominio: ${p}%</span></button>`}).join('')}
+  ${hard.length?`<button class="skill" data-a="hard" data-l="${L.id}" style="border-color:var(--sun)"><span class="row"><span class="ic">${ic('bulb')}</span><b>Palabras para repasar</b></span><span class="mut">${hard.length} palabra${hard.length>1?'s':''} que todavía cuestan: ${hard.slice(0,4).map(w=>esc(w.w)).join(', ')}${hard.length>4?'…':''}</span><span class="mut" style="margin-top:auto">Práctica de escritura</span></button>`:''}</div>`}
+
+/* ---------- sesión de práctica ---------- */
+function start(listId,mode,words,hard){const L=S.lists[listId];words=shuffle(words||L.words);
+  const per=mode==='test'?words.length:Math.max(1,+set().perRound||5);const rounds=[];for(let i=0;i<words.length;i+=per)rounds.push(words.slice(i,i+per));
+  R={id:uid(),listId,mode,hard:!!hard,rounds,r:0,cur:[...rounds[0]],i:0,results:{},requeued:new Set(),startedAt:Date.now(),roundOk:0};
+  view={name:'run'};enterItem()}
+function enterItem(){const w=R.cur[R.i];R.item={w,phase:'ask',hint:0,tries:0,msg:'',heard:'',ans:''};
+  if(R.mode==='listen'){const pool=misspell(w.w);R.item.opts=shuffle([w.w,...pool]);R.item.wrong=new Set()}
+  render();window.scrollTo(0,0);
+  if(R.mode==='listen'||R.mode==='write'||R.mode==='test')setTimeout(()=>speak(w.w),350)}
+function rec(ok,ans){const k=R.item.w.w;let r=R.results[k];
+  if(!r){R.results[k]={w:k,ok,tries:1,ans:ans||'',hint:R.item.hint>0};if(ok)R.roundOk++;
+    if(!ok&&R.mode!=='test'&&!R.requeued.has(k)){R.requeued.add(k);R.cur.push(R.item.w)}}
+  else r.tries++}
+function saveRun(done){const res=Object.values(R.results);if(!res.length)return;const L=S.lists[R.listId];
+  const s={id:R.id,listId:R.listId,listTitle:L?L.title:'',mode:R.mode,hard:R.hard,startedAt:R.startedAt,endedAt:Date.now(),results:res,score:res.filter(r=>r.ok).length,total:res.length,done:!!done,updatedAt:Date.now()};
+  S.sessions[s.id]=s;putDoc('sessions/'+s.id,s)}
+function next(){R.i++;if(R.i<R.cur.length)return enterItem();
+  if(R.r<R.rounds.length-1){saveRun(false);if(set().breaks){view={name:'brk'};render();window.scrollTo(0,0);return}return nextRound()}
+  saveRun(true);view={name:'done'};render();window.scrollTo(0,0);chime(true)}
+function nextRound(){R.r++;R.cur=[...R.rounds[R.r]];R.i=0;R.roundOk=0;view={name:'run'};enterItem()}
+function dotsHtml(){return `<div class="dots" aria-label="Palabra ${R.i+1} de ${R.cur.length}">${R.cur.map((w,i)=>{const r=R.results[w.w];let c=i===R.i?'cur':'';if(i<R.i&&r)c=r.ok?'ok':'no';return `<i class="${c}"></i>`}).join('')}</div>`}
+function vRun(){const it=R.item,w=it.w,m=R.mode;
+  const head=`<div class="runbar"><button class="btn soft" data-a="stop">${ic('back')} Salir</button><div style="text-align:center"><b>${R.hard?'Palabras para repasar':SK[m].t}</b><div class="mut" style="font-size:.9rem">${R.rounds.length>1?`Ronda ${R.r+1} de ${R.rounds.length} · `:''}palabra ${R.i+1} de ${R.cur.length}</div></div>${dotsHtml()}</div>`;
+  return head+`<div class="stage">${({listen:runListen,read:runRead,write:runWrite,speak:runSpeak,test:runTest})[m](it,w)}</div>`}
+const audioBtns=(w,extra='')=>`<button class="audio" data-a="say" aria-label="Escuchar la palabra">${ic('speak')}</button><div class="row" style="justify-content:center;margin-bottom:14px"><button class="btn soft" data-a="slow">${ic('turtle')} Más lento</button>${w.s?`<button class="btn soft" data-a="sent">${ic('quote')} En una frase</button>`:''}${extra}</div>`;
+const sentHtml=(w,hide)=>w.s?`<p class="sentence">${esc(w.s).replace(new RegExp('\\b('+w.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')\\b','i'),hide?'<mark>_____</mark>':'<mark>$1</mark>')}</p>`:'';
+const nextBtn=()=>`<button class="btn xl" data-a="next" autofocus>Siguiente ${ic('back').replace('<path','<path transform="rotate(180 14 14)"')}</button>`;
+const PRAISE=['¡Muy bien!','¡Excelente!','¡Lo lograste!','¡Perfecto!','¡Bien hecho!'];
+const praise=()=>PRAISE[rnd(PRAISE.length)];
+function runListen(it,w){const done=it.phase==='done';
+  return `<p class="ins">Escucha y toca la palabra bien escrita.</p>${audioBtns(w)}
+  <div class="opts">${it.opts.map((o,i)=>{const c=done&&o===w.w?'ok':it.wrong.has(i)?'no':'';return `<button class="opt ${c}" data-a="pick" data-i="${i}" ${done||it.wrong.has(i)?'disabled':''}>${esc(o)}</button>`}).join('')}</div>
+  ${it.msg?`<div class="fb ${done?'ok':'al'} pop">${it.msg}</div>`:''}${done?nextBtn():''}`}
+function runRead(it,w){const ask=it.phase==='ask';
+  return `<p class="ins">${ask?'Lee la palabra en voz alta. Después toca “Comprobar”.':'¿La dijiste igual que el audio?'}</p>
+  <div class="word">${esc(w.w)}</div>${sentHtml(w)}
+  <div class="row" style="justify-content:center">${ask?`<button class="btn xl" data-a="readCheck" autofocus>${ic('speak')} Comprobar</button><button class="btn soft" data-a="spell">${ic('abc')} Deletrear</button>`
+   :it.phase==='check'?`<button class="btn xl" data-a="selfOk" autofocus>${ic('check')} Sí, igual</button><button class="btn soft xl" data-a="selfNo">Todavía no</button><button class="btn soft" data-a="say">${ic('speak')} Otra vez</button>`:''}
+   ${w.s&&ask?`<button class="btn soft" data-a="sent">${ic('quote')} Escuchar la frase</button>`:''}</div>
+  ${it.msg?`<div class="fb ${it.phase==='done'?'ok':'al'} pop">${it.msg}</div>`:''}${it.phase==='done'?nextBtn():''}
+  ${it.phase==='retry'?`<div class="row" style="justify-content:center"><button class="btn xl" data-a="readCheck" autofocus>${ic('speak')} Comprobar otra vez</button></div>`:''}`}
+function lettersHtml(word,marks){return `<div class="letters">${[...word].map((c,i)=>`<span class="${marks?(marks[i]?'ok':'miss'):''}">${esc(c)}</span>`).join('')}</div>`}
+function runWrite(it,w){const L=w.w.length;
+  if(it.phase==='done')return `<p class="ins">${esc(it.msg)}</p>${lettersHtml(w.w,[...w.w].map(()=>true))}<div class="fb ok pop">${ic('star').replace('viewBox','width="22" height="22" style="vertical-align:-4px" viewBox')} ${R.results[w.w]?.ok?'+1 estrella':'¡Ya la escribiste bien!'}</div>${nextBtn()}`;
+  if(it.phase==='copy')return `<p class="ins">Casi. Mira la palabra correcta: las letras en <b style="color:var(--al)">naranja</b> son las que faltaron o cambiaron.</p>
+   <p class="mut">Tú escribiste: <span class="wd">${esc(it.ans)||'—'}</span></p>${lettersHtml(w.w,alignMarks(it.ans,w.w))}
+   <form data-f="copy"><label for="ans" class="sr">Escribe la palabra</label><input class="answer" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Escríbela mirando"><p></p><button class="btn xl" type="submit">${ic('check')} Listo</button></form>`;
+  const shown=w.w.slice(0,it.hint);
+  return `<p class="ins">Escucha y escribe la palabra.</p>${audioBtns(w,`<button class="btn soft" data-a="hint">${ic('bulb')} Pista</button>`)}${sentHtml(w,true)}
+  <form data-f="write"><label for="ans" class="sr">Escribe la palabra</label><input class="answer" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus value="${esc(it.ans||shown)}" placeholder="Escribe aquí">
+  ${set().letterHints?`<div class="slots" id="slots" aria-hidden="true">${Array.from({length:L},(_,i)=>`<i class="${i<(it.ans||shown).length?'f':''}"></i>`).join('')}</div><p class="mut" style="font-size:.9rem">${L} letras</p>`:'<p></p>'}
+  ${it.hint?`<p class="mut">Pista: empieza con <b class="wd">${esc(shown)}</b></p>`:''}
+  <button class="btn xl" type="submit">${ic('check')} Comprobar</button></form>`}
+function runSpeak(it,w){const can=canListen();
+  const tail=it.phase==='done'?`<div class="fb ok pop">${esc(it.msg)}</div>${nextBtn()}`
+   :it.msg?`<div class="fb al pop">${esc(it.msg)}</div>${it.tries>=3?`<div class="row" style="justify-content:center"><button class="btn soft" data-a="selfOk">Un adulto confirma que la dije bien</button><button class="btn soft" data-a="skip">Pasar a la siguiente</button></div>`:''}`:'';
+  if(!can)return `<p class="ins">Escucha el modelo, di la palabra en voz alta y compara.</p><div class="word">${esc(w.w)}</div>${audioBtns(w)}
+   <p class="mut">Este navegador no puede usar el micrófono. Usa Chrome o Edge para que la plataforma te escuche.</p>
+   ${it.phase==='done'?tail:`<div class="row" style="justify-content:center"><button class="btn xl" data-a="selfOk">${ic('check')} La dije bien</button><button class="btn soft xl" data-a="selfNo">Quiero repetir</button></div>${it.msg?`<div class="fb al">${esc(it.msg)}</div>`:''}`}`;
+  return `<p class="ins">1. Escucha el modelo. 2. Toca el micrófono y di la palabra.</p><div class="word">${esc(w.w)}</div>
+  <div class="row" style="justify-content:center;gap:24px"><button class="audio" data-a="say" aria-label="Escuchar modelo">${ic('speak')}</button>
+  <button class="audio mic ${it.phase==='listening'?'on':''}" data-a="mic" aria-label="Hablar" ${it.phase==='listening'||it.phase==='done'?'disabled':''}>${ic('mic')}</button></div>
+  <div class="row" style="justify-content:center"><button class="btn soft" data-a="slow">${ic('turtle')} Más lento</button><button class="btn soft" data-a="spell">${ic('abc')} Deletrear</button></div>
+  <p class="mut" style="min-height:1.6em">${it.phase==='listening'?'Te escucho… di la palabra ahora.':it.heard?'Escuché: <b class="wd">'+esc(it.heard)+'</b>':''}</p>${tail}`}
+function runTest(it,w){return `<p class="ins">Escucha y escribe. Al final verás tus resultados.</p>${audioBtns(w)}${sentHtml(w,true)}
+  <form data-f="test"><label for="ans" class="sr">Escribe la palabra</label><input class="answer" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Escribe aquí"><p></p><button class="btn xl" type="submit">Siguiente</button></form>`}
+function vBreak(){const tips=['Estira los brazos hacia arriba y cuenta hasta 5.','Toma un poco de agua.','Respira profundo 3 veces: inhala… exhala…','Mueve los hombros en círculos.','Mira por la ventana unos segundos.'];
+  const left=R.rounds.length-R.r-1;
+  return `<div class="stage"><div class="paper pop" style="margin:20px 0"><h1>¡Ronda ${R.r+1} lista!</h1><p style="font-size:1.25rem">Ganaste <b>${R.roundOk}</b> estrella${R.roundOk===1?'':'s'} en esta ronda.</p></div>
+  <h2>Pausa corta</h2><p style="font-size:1.2rem">${tips[R.r%tips.length]}</p><p class="mut">Falta${left>1?'n':''} ${left} ronda${left>1?'s':''}. Tu avance ya está guardado.</p>
+  <div class="row" style="justify-content:center;margin-top:20px"><button class="btn xl" data-a="cont" autofocus>Seguir con la ronda ${R.r+2}</button><button class="btn soft xl" data-a="finish">Terminar por hoy</button></div></div>`}
+function vDone(){const res=Object.values(R.results),ok=res.filter(r=>r.ok).length,miss=res.filter(r=>!r.ok);const L=S.lists[R.listId];
+  return `<div class="stage"><div class="paper pop" style="margin:10px 0 24px"><h1>${R.mode==='test'?'Ensayo terminado':'¡Práctica completa!'}</h1>
+  <p style="font-size:1.3rem"><b>${ok}</b> de <b>${res.length}</b> palabras bien al primer intento.</p><p class="mut">${ok===res.length?'¡Todas! Excelente trabajo.':'Cada práctica te ayuda a recordar mejor. Todo quedó guardado.'}</p></div>
+  <div class="card" style="text-align:left"><table><thead><tr><th>Palabra</th><th>${R.mode==='test'?'Tu respuesta':'Intentos'}</th><th class="c">Resultado</th></tr></thead><tbody>
+  ${res.map(r=>`<tr><td class="wd">${esc(r.w)}</td><td class="wd">${R.mode==='test'||R.mode==='write'?esc(r.ans||'—'):r.tries}</td><td class="c">${r.ok?'<span class="lv m" title="Bien"></span>':'<span class="lv x" title="Para repasar"></span>'}</td></tr>`).join('')}</tbody></table></div>
+  <div class="row" style="justify-content:center;margin-top:22px">${miss.length?`<button class="btn xl sun" data-a="hard" data-l="${R.listId}" data-only="1" autofocus>${ic('bulb')} Repasar ${miss.length} palabra${miss.length>1?'s':''}</button>`:''}
+  ${L?`<button class="btn xl ${miss.length?'soft':''}" data-a="list" data-id="${R.listId}" ${miss.length?'':'autofocus'}>Elegir otra actividad</button>`:''}<button class="btn soft xl" data-a="nav" data-v="home">Inicio</button></div></div>`}
+
+/* ---------- progreso y ajustes ---------- */
+function vProgress(){const ls=liveLists();const sel=view.id&&S.lists[view.id]?S.lists[view.id]:ls[0];
+  const ses=Object.values(S.sessions).sort((a,b)=>b.startedAt-a.startedAt);
+  const days=new Set(ses.map(s=>dayKey(s.startedAt))).size;
+  let mastered=0,total=0;ls.forEach(L=>{const st=wordStats(L.id);L.words.forEach(w=>{total++;const o=st[w.w.toLowerCase()];if(o&&(o.test?.last||o.write?.last))mastered++})});
+  const lvl=o=>!o?'':o.last?'m':o.ok?'p':'x';
+  return `<h1>Progreso</h1><p class="mut">Para revisar juntos. Verde = dominada · amarillo = practicando · naranja = para repasar · vacío = aún no practicada.</p>
+  <div class="stats"><div class="stat"><b>${days}</b>días de práctica</div><div class="stat"><b>${streak()}</b>días seguidos</div><div class="stat"><b>${mastered}/${total}</b>palabras que ya escribe bien</div><div class="stat"><b>${stars()}</b>estrellas</div></div>
+  ${sel?`<h2>Palabra por palabra</h2><label for="psel">Lista</label><select id="psel" data-c="psel" style="max-width:420px">${ls.map(L=>`<option value="${L.id}" ${L.id===sel.id?'selected':''}>${esc(L.title)}</option>`).join('')}</select>
+  <div class="card" style="margin-top:14px"><table class="stack"><thead><tr><th>Palabra</th>${ROUTE.map(k=>`<th class="c">${SK[k].t}</th>`).join('')}</tr></thead><tbody>
+  ${(()=>{const st=wordStats(sel.id);return sel.words.map(w=>{const o=st[w.w.toLowerCase()]||{};return `<tr><td class="wd">${esc(w.w)}</td>${ROUTE.map(k=>`<td class="c"><span class="lv ${lvl(o[k])}" title="${o[k]?o[k].ok+' de '+o[k].n+' bien':'sin practicar'}"></span></td>`).join('')}</tr>`}).join('')})()}</tbody></table></div>`:''}
+  <h2>Historial de prácticas</h2>${ses.length?ses.slice(0,60).map(s=>`<details><summary>${esc(fmtDate(s.startedAt))} · ${esc(s.listTitle)} · ${s.hard?'Repaso':esc(SK[s.mode]?.t||s.mode)} · <b>${s.score}/${s.total}</b> ${s.done?'':'<span class="mut">(incompleta)</span>'}</summary>
+   <p class="mut">${Math.max(1,Math.round((s.endedAt-s.startedAt)/60000))} min</p><table><tbody>${(s.results||[]).map(r=>`<tr><td class="wd">${esc(r.w)}</td><td class="wd">${esc(r.ans||'')}</td><td class="c"><span class="lv ${r.ok?'m':'x'}"></span></td></tr>`).join('')}</tbody></table></details>`).join(''):'<p class="mut">Aún no hay prácticas.</p>'}`}
+function vSettings(){const s=set();const sw=(k,t,d)=>`<label class="switch"><input type="checkbox" data-c="set" data-k="${k}" ${s[k]?'checked':''}><span>${t}${d?`<br><span class="hint">${d}</span>`:''}</span></label>`;
+  return `<h1>Ajustes</h1><p class="mut">Para papá o mamá. Los cambios se guardan solos.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))"><div class="card"><h3>Perfil y práctica</h3>
+  <label for="sn">Nombre de la estudiante</label><input type="text" id="sn" data-c="set" data-k="name" value="${esc(s.name)}" placeholder="Nombre">
+  <label for="sp">Palabras por ronda <span class="hint">(rondas cortas ayudan a mantener la atención)</span></label><select id="sp" data-c="set" data-k="perRound">${[3,4,5,6,8,10,20].map(n=>`<option ${+s.perRound===n?'selected':''}>${n}</option>`).join('')}</select>
+  ${sw('breaks','Pausa corta entre rondas','Una pantalla tranquila con una sugerencia de movimiento.')}
+  ${sw('letterHints','Mostrar cuántas letras tiene la palabra','Rayitas debajo de la caja al escribir.')}</div>
+  <div class="card"><h3>Voz y sonido</h3>
+  <label for="sa">Acento</label><select id="sa" data-c="set" data-k="accent"><option value="en-US" ${s.accent==='en-US'?'selected':''}>Inglés de Estados Unidos</option><option value="en-GB" ${s.accent==='en-GB'?'selected':''}>Inglés británico</option></select>
+  <label for="sr">Velocidad de la voz</label><select id="sr" data-c="set" data-k="rate">${[[0.6,'Muy lenta'],[0.75,'Lenta'],[0.8,'Tranquila'],[0.9,'Normal'],[1,'Rápida']].map(([v,t])=>`<option value="${v}" ${+s.rate===v?'selected':''}>${t}</option>`).join('')}</select>
+  <p><button class="btn soft" data-a="hear" data-w="beautiful">${ic('speak')} Probar voz</button></p>
+  ${sw('sfx','Sonidos suaves al acertar')}
+  ${sw('calm','Modo calma','Sin animaciones.')}
+  ${sw('big','Letra más grande')}</div></div>
+  <h2>Copia de seguridad</h2><div class="card"><p>Dónde se guarda: <b id="where">${db?'en la nube de Claude, sincronizado entre dispositivos':'en este navegador'}</b>. Descarga una copia de vez en cuando para no perder nada.</p>
+  <div class="row"><button class="btn" data-a="export">Descargar copia (.json)</button><button class="btn soft" data-a="copyExport">Copiar datos</button>
+  <label class="btn soft" style="margin:0">Restaurar desde archivo<input type="file" accept=".json,application/json" data-c="import" class="sr"></label></div>
+  <details style="margin-top:14px"><summary>Pegar datos para restaurar</summary><textarea id="imp" style="min-height:120px;font-family:monospace;font-size:13px"></textarea><p><button class="btn soft" data-a="importText">Restaurar datos pegados</button></p></details></div>
+  <h2>Zona de cuidado</h2><p>${confirmDel==='all'?`<button class="btn danger" data-a="resetAll">Sí, borrar todo de este dispositivo</button> <button class="btn soft" data-a="cancelDel">Cancelar</button>`:`<button class="btn danger" data-a="askReset">Borrar todos los datos de este dispositivo</button>`}</p>`}
+function exportJson(){return JSON.stringify({app:'spelling-coach',version:1,exportedAt:new Date().toISOString(),...S},null,1)}
+async function doExport(){const data=exportJson(),filename='spelling-coach-'+today()+'.json';
+  try{if(window.claude&&window.claude.use){const d=await window.claude.use('downloads');if(d){await d.save({filename,data});toast('Copia descargada');return}}}catch(e){}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=filename;document.body.appendChild(a);a.click();a.remove();toast('Copia descargada')}catch(e){toast('No se pudo descargar; usa “Copiar datos”.')}}
+function importData(txt){try{const d=JSON.parse(txt);if(!d.lists||!d.sessions)throw 0;
+  Object.values(d.lists).forEach(l=>{if(!S.lists[l.id]||(l.updatedAt||0)>(S.lists[l.id].updatedAt||0)){S.lists[l.id]=l;putDoc('lists/'+l.id,l)}});
+  Object.values(d.sessions).forEach(s=>{if(!S.sessions[s.id]){S.sessions[s.id]=s;putDoc('sessions/'+s.id,s)}});
+  if(d.meta&&d.meta.settings){S.meta.settings={...DEF,...d.meta.settings};saveMeta()}
+  saveLocal();applyLook();toast('Datos restaurados');go('home')}catch(e){toast('Ese archivo no parece una copia de Spelling Coach')}}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a,it=R&&R.item;
+  switch(a){
+  case'nav':if(view.name==='run'&&R)saveRun(false);go(b.dataset.v);break;
+  case'newList':go('edit',{id:null});break;
+  case'editList':go('edit',{id:b.dataset.id});break;
+  case'askDel':confirmDel=b.dataset.id;render();break;
+  case'delList':{const L=S.lists[b.dataset.id];L.deleted=true;saveList(L);confirmDel=null;toast('Lista borrada');render();break}
+  case'list':go('list',{id:b.dataset.id});break;
+  case'hear':speak(b.dataset.w);break;
+  case'start':start(b.dataset.l,b.dataset.m);break;
+  case'hard':{const L=S.lists[b.dataset.l];let ws=b.dataset.only&&R?Object.values(R.results).filter(r=>!r.ok).map(r=>L.words.find(w=>w.w===r.w)).filter(Boolean):hardWords(L);if(!ws.length){toast('No hay palabras para repasar');break}start(L.id,'write',ws,true);break}
+  case'say':speak(it.w.w);break;
+  case'slow':speak(it.w.w,0.55);break;
+  case'spell':spellOut(it.w.w);break;
+  case'sent':speak(it.w.s);break;
+  case'pick':{const i=+b.dataset.i,o=it.opts[i];if(o===it.w.w){rec(it.wrong.size===0);it.phase='done';it.msg=praise();chime(true);speak(it.w.w)}
+    else{rec(false);it.wrong.add(i);it.msg='Esa no es. Escucha otra vez con atención.';speak(it.w.w)}render();break}
+  case'readCheck':it.phase='check';it.msg='';render();speak(it.w.w);break;
+  case'selfOk':rec(it.tries===0);it.phase='done';it.msg=praise();chime(true);render();break;
+  case'selfNo':it.tries++;if(it.tries===1)rec(false);it.phase=R.mode==='read'?'retry':'ask';it.msg='Está bien. Escucha cómo suena, letra por letra, y vuelve a leerla.';render();speak(it.w.w).then(()=>spellOut(it.w.w));break;
+  case'hint':if(it.hint<it.w.w.length-1){it.hint++;it.ans=it.w.w.slice(0,it.hint)}render();break;
+  case'mic':{it.phase='listening';it.heard='';render();
+    listen().then(alts=>{const target=norm(it.w.w);const hit=alts.some(x=>{const n=norm(x);return n===target||n.split(' ').includes(target)||(target.length>=5&&lev(n,target)<=1)});
+      it.heard=alts[0]||'(no escuché nada)';
+      if(hit){if(it.tries===0)rec(true);it.phase='done';it.msg=praise()+' Se entendió perfecto.';chime(true)}
+      else{it.tries++;if(it.tries===1)rec(false);it.phase='ask';it.msg=alts.length&&alts[0]?'Casi. Escucha el modelo otra vez y repite despacio.':'No te escuché. Acércate un poco y habla fuerte y claro.'}
+      render()}).catch(err=>{it.phase='ask';it.msg=err==='not-allowed'||(err&&err.code==='not_granted')||err==='not_granted'?'Necesito permiso para usar el micrófono. Pide ayuda a un adulto.':'El micrófono no respondió. Intenta otra vez.';render()});break}
+  case'skip':if(!R.results[it.w.w])rec(false);next();break;
+  case'next':next();break;
+  case'cont':nextRound();break;
+  case'finish':saveRun(false);view={name:'done'};render();break;
+  case'stop':saveRun(false);go(R&&S.lists[R.listId]?'list':'home',{id:R&&R.listId});break;
+  case'export':doExport();break;
+  case'copyExport':navigator.clipboard.writeText(exportJson()).then(()=>toast('Datos copiados. Pégalos en un documento para guardarlos.'),()=>toast('No se pudo copiar'));break;
+  case'importText':importData($('#imp').value);break;
+  case'askReset':confirmDel='all';render();break;
+  case'cancelDel':confirmDel=null;render();break;
+  case'resetAll':S={meta:{settings:{...DEF}},lists:{},sessions:{}};saveLocal();toast(db?'Borrado de este dispositivo (la copia en la nube sigue disponible al recargar)':'Datos borrados');go('home');break;
+  }});
+document.addEventListener('submit',e=>{e.preventDefault();const f=e.target;
+  if(f.id==='listForm'){const words=parseWords(f.words.value);if(!words.length){toast('Escribe al menos una palabra');return}
+    const old=view.id?S.lists[view.id]:null;const L=old?{...old}:{id:uid(),createdAt:Date.now()};L.title=f.title.value.trim()||'Lista';L.date=f.date.value||today();L.words=words;saveList(L);toast('Lista guardada');go('list',{id:L.id});return}
+  const it=R&&R.item;if(!it)return;const v=$('#ans').value.trim();const ok=norm(v)===norm(it.w.w);
+  if(f.dataset.f==='write'){if(!v){toast('Escribe la palabra primero');return}it.ans=v;
+    if(ok){rec(it.hint===0,v);it.phase='done';it.msg=praise();chime(true);spellOut(it.w.w)}else{rec(false,v);it.phase='copy';chime(false);speak(it.w.w)}render()}
+  else if(f.dataset.f==='copy'){if(ok){it.phase='done';it.msg='¡Muy bien! Ahora ya la conoces mejor.';chime(true)}else{toast('Mira bien las letras e inténtalo otra vez');$('#ans').select();return}render()}
+  else if(f.dataset.f==='test'){it.ans=v;rec(ok,v);next()}});
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='lw'){const n=parseWords(t.value).length;$('#prev').textContent=n+' palabra'+(n===1?'':'s')}
+  if(t.id==='ans'&&$('#slots')){const n=t.value.length;[...$('#slots').children].forEach((x,i)=>x.classList.toggle('f',i<n))}
+  if(t.dataset.c==='set'&&t.type==='text'){set()[t.dataset.k]=t.value;clearTimeout(t._t);t._t=setTimeout(saveMeta,600)}});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.c==='set'&&t.type!=='text'){const k=t.dataset.k;set()[k]=t.type==='checkbox'?t.checked:(k==='accent'?t.value:+t.value);saveMeta();applyLook();toast('Guardado')}
+  if(t.dataset.c==='psel')go('progress',{id:t.value});
+  if(t.dataset.c==='import'&&t.files[0]){t.files[0].text().then(importData)}});
+
+loadLocal();applyLook();render();initCloud();initVoice();
+}
+</script>
+</body>
+</html>
