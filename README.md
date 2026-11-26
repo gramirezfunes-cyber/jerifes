@@ -1,4 +1,9 @@
-# Spelling Coach
+# jerifunes
+Proyectos de Jeri Funes
+
+---
+
+## Spelling Coach
 
 Plataforma tutor de **spelling en inglés** pensada para una estudiante de 12 años con TDAH y TEA nivel 1.
 Se ingresa la lista de palabras de la semana (o del día) y la plataforma entrena cuatro habilidades más un ensayo de examen:
