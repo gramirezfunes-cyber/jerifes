@@ -197,7 +197,7 @@ const ic=n=>`<svg viewBox="0 0 28 28" aria-hidden="true">${ICON[n]}</svg>`;
 const LS='spellingCoach.v1';
 const DEF={name:'',perRound:5,rate:0.8,accent:'en-US',letterHints:true,sfx:true,calm:false,big:false,breaks:true,autoNext:false,reportUrl:''};
 /* URL del Apps Script de Google Sheets para el reporte automático. Si se deja vacía, se puede poner en Ajustes. */
-const REPORT_URL='';
+const REPORT_URL='https://script.google.com/macros/s/AKfycbz5xcUAUK330cRvm4v5gjdf_2R8co5YeSjfBWQLsB5SCbuoLs7ywgJeM97E2MrevZfZ_g/exec';
 let S={meta:{settings:{...DEF}},lists:{},sessions:{}};
 const set=()=>S.meta.settings;
 function loadLocal(){try{const r=localStorage.getItem(LS);if(r){const d=JSON.parse(r);S={meta:d.meta||{},lists:d.lists||{},sessions:d.sessions||{}}}}catch(e){}S.meta.settings={...DEF,...(S.meta.settings||{})}}
