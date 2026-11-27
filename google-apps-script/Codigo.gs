@@ -119,6 +119,13 @@ function reemplazar(h, id, filas) {
   if (filas.length) h.getRange(h.getLastRow() + 1, 1, filas.length, filas[0].length).setValues(filas);
 }
 
+/** Las hojas con configuración regional que usa coma decimal (p. ej. español de España) separan argumentos con ";". */
+function F(formula) {
+  const loc = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetLocale() || 'en_US';
+  const usaComa = /^(en|ja|zh|ko|th|he|hi|ms|fil|es_(MX|US|419|GT|SV|HN|NI|PR|DO|PA))/.test(loc);
+  return usaComa ? formula : formula.replace(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/g, ';');
+}
+
 function asegurarResumen(ss) {
   if (ss.getSheetByName(HOJA_RESUMEN)) return;
   const r = ss.insertSheet(HOJA_RESUMEN, 0);
@@ -132,20 +139,20 @@ function asegurarResumen(ss) {
     ['Palabras bien al primer intento', ''],
     ['Última práctica', '']
   ]);
-  r.getRange('B3').setFormula('=IFERROR(COUNTUNIQUE(FILTER(INT(' + P + '!B2:B),' + P + '!B2:B>=' + desde + ',' + P + '!B2:B<>"")),0)');
-  r.getRange('B4').setFormula('=COUNTIF(' + P + '!B2:B,">="&' + desde + ')');
-  r.getRange('B5').setFormula('=SUMIFS(' + P + '!I2:I,' + P + '!B2:B,">="&' + desde + ')');
-  r.getRange('B6').setFormula('=SUMIFS(' + P + '!F2:F,' + P + '!B2:B,">="&' + desde + ')&" de "&SUMIFS(' + P + '!G2:G,' + P + '!B2:B,">="&' + desde + ')');
-  r.getRange('B7').setFormula('=IFERROR(MAX(' + P + '!B2:B),"—")').setNumberFormat('dd/mm/yyyy HH:mm');
+  r.getRange('B3').setFormula(F('=IFERROR(COUNTUNIQUE(FILTER(INT(' + P + '!B2:B),' + P + '!B2:B>=' + desde + ',' + P + '!B2:B<>"")),0)'));
+  r.getRange('B4').setFormula(F('=COUNTIF(' + P + '!B2:B,">="&' + desde + ')'));
+  r.getRange('B5').setFormula(F('=SUMIFS(' + P + '!I2:I,' + P + '!B2:B,">="&' + desde + ')'));
+  r.getRange('B6').setFormula(F('=SUMIFS(' + P + '!F2:F,' + P + '!B2:B,">="&' + desde + ')&" de "&SUMIFS(' + P + '!G2:G,' + P + '!B2:B,">="&' + desde + ')'));
+  r.getRange('B7').setFormula(F('=IFERROR(MAX(' + P + '!B2:B),"—")')).setNumberFormat('dd/mm/yyyy HH:mm');
   r.getRange('A9:C9').setValues([['Actividad', '% de acierto', 'Prácticas']]).setFontWeight('bold');
   ACTIVIDADES.forEach((a, i) => {
     const row = 10 + i;
     r.getRange(row, 1).setValue(a);
-    r.getRange(row, 2).setFormula('=IFERROR(SUMIFS(' + P + '!F2:F,' + P + '!E2:E,A' + row + ',' + P + '!B2:B,">="&' + desde + ')/SUMIFS(' + P + '!G2:G,' + P + '!E2:E,A' + row + ',' + P + '!B2:B,">="&' + desde + '),"—")').setNumberFormat('0%');
-    r.getRange(row, 3).setFormula('=COUNTIFS(' + P + '!E2:E,A' + row + ',' + P + '!B2:B,">="&' + desde + ')');
+    r.getRange(row, 2).setFormula(F('=IFERROR(SUMIFS(' + P + '!F2:F,' + P + '!E2:E,A' + row + ',' + P + '!B2:B,">="&' + desde + ')/SUMIFS(' + P + '!G2:G,' + P + '!E2:E,A' + row + ',' + P + '!B2:B,">="&' + desde + '),"—")')).setNumberFormat('0%');
+    r.getRange(row, 3).setFormula(F('=COUNTIFS(' + P + '!E2:E,A' + row + ',' + P + '!B2:B,">="&' + desde + ')'));
   });
   r.getRange('A17').setValue('Palabras que más le cuestan (últimos 7 días)').setFontWeight('bold');
-  r.getRange('A18').setFormula('=IFERROR(TEXTJOIN(", ",TRUE,UNIQUE(FILTER(' + D + '!F2:F,' + D + '!G2:G="No",' + D + '!B2:B>=' + desde + '))),"Ninguna")');
+  r.getRange('A18').setFormula(F('=IFERROR(TEXTJOIN(", ",TRUE,UNIQUE(FILTER(' + D + '!F2:F,' + D + '!G2:G="No",' + D + '!B2:B>=' + desde + '))),"Ninguna")'));
   r.setColumnWidth(1, 300);
   r.setColumnWidth(2, 160);
 }
