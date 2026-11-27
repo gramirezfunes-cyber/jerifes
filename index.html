@@ -77,7 +77,12 @@ textarea{min-height:200px;font-family:Andika,Lexend,sans-serif;font-size:1.1rem;
 input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none}
 .hint{font-size:.88rem;color:var(--mut);font-weight:400}
 /* practice */
-.runbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.runbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;margin-bottom:18px}
+.runmid{text-align:center;display:grid;justify-items:center;gap:6px}
+.pill{border-radius:999px;font-weight:700;font-size:1.1rem;min-height:56px;padding:10px 24px;box-shadow:0 4px 0 #c4950d;justify-self:end}
+.pill:active{transform:translateY(2px);box-shadow:0 2px 0 #c4950d}
+.pill{white-space:nowrap}
+@media(max-width:600px){.runbar{grid-template-columns:auto minmax(0,1fr)}.runmid{grid-column:1/-1;order:3}.runbar .pill{padding:10px 16px;font-size:1rem}.runbar .pill svg{width:20px;height:20px}}
 .dots{display:flex;gap:6px;flex-wrap:wrap}
 .dots i{width:16px;height:16px;border-radius:50%;background:var(--line);display:block}
 .dots i.ok{background:var(--ok)}.dots i.no{background:var(--al)}.dots i.cur{background:var(--blue);outline:3px solid light-dark(#c8d3ff,#2f3f8f)}
@@ -402,7 +407,7 @@ function next(){R.i++;if(R.i<R.cur.length)return enterItem();
 function nextRound(){R.r++;R.cur=[...R.rounds[R.r]];R.i=0;R.roundOk=0;view={name:'run'};enterItem()}
 function dotsHtml(){return `<div class="dots" aria-label="Palabra ${R.i+1} de ${R.cur.length}">${R.cur.map((w,i)=>{const r=R.results[w.w];let c=i===R.i?'cur':'';if(i<R.i&&r)c=r.ok?'ok':'no';return `<i class="${c}"></i>`}).join('')}</div>`}
 function vRun(){const it=R.item,w=it.w,m=R.mode;
-  const head=`<div class="runbar"><button class="btn soft" data-a="stop">${ic('back')} Salir</button><div style="text-align:center"><b>${R.hard?'Palabras para repasar':SK[m].t}</b><div class="mut" style="font-size:.9rem">${R.rounds.length>1?`Ronda ${R.r+1} de ${R.rounds.length} · `:''}palabra ${R.i+1} de ${R.cur.length}</div></div>${dotsHtml()}</div>`;
+  const head=`<div class="runbar"><button class="btn soft" data-a="stop">${ic('back')} Salir</button><div class="runmid"><b>${R.hard?'Palabras para repasar':SK[m].t}</b><div class="mut" style="font-size:.9rem">${R.rounds.length>1?`Ronda ${R.r+1} de ${R.rounds.length} · `:''}palabra ${R.i+1} de ${R.cur.length}</div>${dotsHtml()}</div><button class="btn sun pill" data-a="finish">${ic('check')} Terminar por hoy</button></div>`;
   return head+`<div class="stage">${({listen:runListen,read:runRead,write:runWrite,speak:runSpeak,test:runTest})[m](it,w)}</div>`}
 const audioBtns=(w,extra='')=>`<button class="audio" data-a="say" aria-label="Escuchar la palabra">${ic('speak')}</button><div class="row" style="justify-content:center;margin-bottom:14px"><button class="btn soft" data-a="slow">${ic('turtle')} Más lento</button>${w.s?`<button class="btn soft" data-a="sent">${ic('quote')} En una frase</button>`:''}${extra}</div>`;
 const sentHtml=(w,hide)=>w.s?`<p class="sentence">${esc(w.s).replace(new RegExp('\\b('+w.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')\\b','i'),hide?'<mark>_____</mark>':'<mark>$1</mark>')}</p>`:'';
@@ -450,9 +455,9 @@ function vBreak(){const tips=['Estira los brazos hacia arriba y cuenta hasta 5.'
   const left=R.rounds.length-R.r-1;
   return `<div class="stage"><div class="paper pop" style="margin:20px 0"><h1>¡Ronda ${R.r+1} lista!</h1><p style="font-size:1.25rem">Ganaste <b>${R.roundOk}</b> estrella${R.roundOk===1?'':'s'} en esta ronda.</p></div>
   <h2>Pausa corta</h2><p style="font-size:1.2rem">${tips[R.r%tips.length]}</p><p class="mut">Falta${left>1?'n':''} ${left} ronda${left>1?'s':''}. Tu avance ya está guardado.</p>
-  <div class="row" style="justify-content:center;margin-top:20px"><button class="btn xl" data-a="cont" autofocus>Seguir con la ronda ${R.r+2}</button><button class="btn soft xl" data-a="finish">Terminar por hoy</button></div></div>`}
+  <div class="row" style="justify-content:center;margin-top:20px"><button class="btn xl" data-a="cont" autofocus>Seguir con la ronda ${R.r+2}</button><button class="btn sun pill xl" data-a="finish">${ic('check')} Terminar por hoy</button></div></div>`}
 function vDone(){const res=Object.values(R.results),ok=res.filter(r=>r.ok).length,miss=res.filter(r=>!r.ok);const L=S.lists[R.listId];
-  return `<div class="stage"><div class="paper pop" style="margin:10px 0 24px"><h1>${R.mode==='test'?'Ensayo terminado':'¡Práctica completa!'}</h1>${reportUrl()?'<p id="sendst" class="mut">Guardando resultados para papá…</p>':''}
+  return `<div class="stage"><div class="paper pop" style="margin:10px 0 24px"><h1>${R.early?'¡Buen trabajo por hoy!':R.mode==='test'?'Ensayo terminado':'¡Práctica completa!'}</h1>${reportUrl()?'<p id="sendst" class="mut">Guardando resultados para papá…</p>':''}
   <p style="font-size:1.3rem"><b>${ok}</b> de <b>${res.length}</b> palabras bien al primer intento.</p><p class="mut">${ok===res.length?'¡Todas! Excelente trabajo.':'Cada práctica te ayuda a recordar mejor. Todo quedó guardado.'}</p></div>
   <div class="card" style="text-align:left"><table><thead><tr><th>Palabra</th><th>${R.mode==='test'?'Tu respuesta':'Intentos'}</th><th class="c">Resultado</th></tr></thead><tbody>
   ${res.map(r=>`<tr><td class="wd">${esc(r.w)}</td><td class="wd">${R.mode==='test'||R.mode==='write'?esc(r.ans||'—'):r.tries}</td><td class="c">${r.ok?'<span class="lv m" title="Bien"></span>':'<span class="lv x" title="Para repasar"></span>'}</td></tr>`).join('')}</tbody></table></div>
@@ -573,7 +578,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   case'skip':if(!R.results[it.w.w])rec(false);next();break;
   case'next':next();break;
   case'cont':nextRound();break;
-  case'finish':{const sid=R.id,pr=saveRun(false);view={name:'done'};render();if(pr)pr.then(()=>sentLine(sid));break}
+  case'finish':{if(!Object.keys(R.results).length){toast('Todavía no hay respuestas. ¡Haz al menos una palabra!');break}R.early=true;const sid=R.id,pr=saveRun(false);view={name:'done'};render();window.scrollTo(0,0);chime(true);if(pr)pr.then(()=>sentLine(sid));break}
   case'stop':saveRun(false);go(R&&S.lists[R.listId]?'list':'home',{id:R&&R.listId});break;
   case'copyReport':navigator.clipboard.writeText(reportText(view.rdays||7)).then(()=>toast('Reporte copiado'),()=>toast('No se pudo copiar'));break;
   case'shareReport':navigator.share({title:'Reporte de Spelling Coach',text:reportText(view.rdays||7)}).catch(()=>{});break;
