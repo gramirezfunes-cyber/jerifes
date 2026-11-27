@@ -49,11 +49,14 @@ Configuración (una sola vez, unos 5 minutos):
 1. Abre la hoja de Google para los reportes → **Extensiones → Apps Script**.
 2. Borra lo que haya, pega el contenido de [`google-apps-script/Codigo.gs`](google-apps-script/Codigo.gs) y guarda.
 3. **Implementar → Nueva implementación →** tipo **Aplicación web**. *Ejecutar como:* Yo. *Quién tiene acceso:* Cualquier usuario. Autoriza los permisos.
+   Antes de implementar, cambia `CLAVE_PAPA` por tu propia clave (mínimo 8 caracteres).
 4. Copia la **URL de la aplicación web** (termina en `/exec`).
 5. Pégala en la plataforma en **Ajustes → Reporte automático a Google Sheets**, o fíjala en `index.html` en la constante `REPORT_URL` para que funcione en cualquier dispositivo sin configurarlo.
 6. Pulsa **Enviar fila de prueba** y revisa la hoja.
 
 Las prácticas hechas sin internet se envían solas cuando vuelve la conexión.
+
+**3. Panel de papá (en la misma web).** Abre la plataforma con `#papa` al final de la dirección (o **Ajustes → Abrir Panel de papá**) y escribe tu `CLAVE_PAPA`. Desde cualquier dispositivo verás días y minutos de práctica, aciertos por actividad, las palabras que más le cuestan y, en cada práctica, qué escribió palabra por palabra. La clave se valida en tu Apps Script: sin ella nadie puede leer los resultados.
 
 ## Publicar en GitHub Pages (5 minutos)
 

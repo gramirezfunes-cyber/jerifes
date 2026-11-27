@@ -3,7 +3,8 @@
  *
  * Instalación (una sola vez):
  * 1. Abre la hoja de Google donde quieres los reportes.
- * 2. Menú Extensiones → Apps Script. Borra lo que haya y pega TODO este archivo. Guarda.
+ * 2. Menú Extensiones → Apps Script. Borra lo que haya y pega TODO este archivo.
+ *    Cambia CLAVE_PAPA (más abajo) por tu propia clave y guarda.
  * 3. Botón Implementar → Nueva implementación → tipo "Aplicación web".
  *      Ejecutar como: Yo.   Quién tiene acceso: Cualquier usuario.
  * 4. Autoriza los permisos y copia la "URL de la aplicación web" (termina en /exec).
@@ -12,6 +13,12 @@
  * Cada práctica crea o actualiza una fila en "Prácticas" y una fila por palabra en
  * "Detalle por palabra". La pestaña "Resumen" se calcula sola (últimos 7 días).
  */
+
+/**
+ * CLAVE DEL PANEL DE PAPÁ: cámbiala por una clave tuya (mínimo 8 caracteres) antes de implementar.
+ * La usarás en Spelling Coach → Panel de papá. Sin ella nadie puede leer los resultados.
+ */
+const CLAVE_PAPA = 'cambia-esta-clave';
 
 const HOJA_PRACTICAS = 'Prácticas';
 const HOJA_DETALLE = 'Detalle por palabra';
@@ -23,6 +30,7 @@ function doPost(e) {
   lock.waitLock(20000);
   try {
     const d = JSON.parse(e.postData.contents);
+    if (d && d.accion === 'datos') return leerDatos(d.clave);
     if (!d || !d.id) return salida('sin datos');
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const practicas = hoja(ss, HOJA_PRACTICAS, ['ID', 'Fecha', 'Alumna', 'Lista', 'Actividad', 'Bien al primer intento', 'Total de palabras', '% de acierto', 'Minutos', 'Completa', 'Palabras para repasar']);
@@ -54,6 +62,29 @@ function doPost(e) {
 
 function doGet() {
   return salida('Spelling Coach: el reporte automático está activo.');
+}
+
+/** Devuelve las prácticas al Panel de papá, solo con la clave correcta. */
+function leerDatos(clave) {
+  if (CLAVE_PAPA === 'cambia-esta-clave' || CLAVE_PAPA.length < 8) return json({ error: 'config' });
+  if (String(clave || '') !== CLAVE_PAPA) { Utilities.sleep(1500); return json({ error: 'clave' }); }
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const P = ss.getSheetByName(HOJA_PRACTICAS), D = ss.getSheetByName(HOJA_DETALLE);
+  const filas = P && P.getLastRow() > 1 ? P.getRange(2, 1, P.getLastRow() - 1, 11).getValues().slice(-1500) : [];
+  const practicas = filas.filter(r => r[0]).map(r => ({
+    id: r[0], fecha: r[1], alumna: r[2], lista: r[3], actividad: r[4],
+    bien: r[5], total: r[6], minutos: r[8], completa: r[9] === 'Sí'
+  }));
+  const ids = new Set(practicas.map(p => p.id));
+  const det = D && D.getLastRow() > 1 ? D.getRange(2, 1, D.getLastRow() - 1, 10).getValues() : [];
+  const detalle = det.filter(r => ids.has(r[0])).map(r => ({
+    id: r[0], palabra: r[5], ok: r[6] === 'Sí', intentos: r[7], respuesta: r[8], pista: r[9] === 'Sí'
+  }));
+  return json({ practicas: practicas, detalle: detalle, generado: new Date() });
+}
+
+function json(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
 
 function salida(t) {
