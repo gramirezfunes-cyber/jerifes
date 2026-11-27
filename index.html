@@ -30,6 +30,8 @@ nav{display:flex;flex-wrap:wrap;gap:6px}
 nav button{background:transparent;border:2px solid transparent;color:#fff;border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:500;min-height:44px}
 nav button[aria-current=true]{background:#fff;color:#1b2b8f}
 nav button:hover{border-color:#ffffff66}
+nav button.navpapa{border-color:#ffcd3c;color:#ffcd3c}nav button.navpapa[aria-current=true]{background:#ffcd3c;color:#2a2000}
+nav button[hidden]{display:none}
 .status{font-size:.8rem;opacity:.85;width:100%;text-align:right;max-width:1000px;margin:2px auto 0}
 main{max-width:1000px;margin:0 auto;padding:clamp(20px,4vw,44px) max(4vw,14px) 80px}
 h1{font-size:clamp(1.9rem,4.5vw,2.8rem);line-height:1.08;margin:0 0 .3em;text-wrap:balance}
@@ -152,6 +154,7 @@ summary{cursor:pointer;font-weight:500}
       <button data-a="nav" data-v="lists">Mis listas</button>
       <button data-a="nav" data-v="progress">Progreso</button>
       <button data-a="nav" data-v="settings">Ajustes</button>
+      <button data-a="nav" data-v="parent" id="navPapa" class="navpapa" hidden>Panel de papá</button>
     </nav>
   </div>
   <div class="status" id="status">Guardado en este dispositivo</div>
@@ -295,7 +298,7 @@ const stars=()=>Object.values(S.sessions).reduce((a,s)=>a+(s.score||0),0);
 let view={name:'home'};let R=null;let confirmDel=null;
 function go(name,extra){view={name,...extra};if(name!=='run')R=null;confirmDel=null;try{if(name==='parent'){if(location.hash!=='#papa')history.replaceState(null,'','#papa')}else if(location.hash)history.replaceState(null,'',location.pathname+location.search)}catch(e){}render();window.scrollTo(0,0);if(name==='parent'&&PD.st!=='loading'&&getKey())loadParent()}
 function applyLook(){document.documentElement.classList.toggle('big',!!set().big);document.body.classList.toggle('calm',!!set().calm)}
-function render(){document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===view.name||(view.name==='list'&&b.dataset.v==='lists')||(view.name==='edit'&&b.dataset.v==='lists')));
+function render(){const np=$('#navPapa');if(np)np.hidden=!getKey();document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===view.name||(view.name==='list'&&b.dataset.v==='lists')||(view.name==='edit'&&b.dataset.v==='lists')));
   const f={home:vHome,lists:vLists,edit:vEdit,list:vList,run:vRun,done:vDone,brk:vBreak,progress:vProgress,settings:vSettings,parent:vParent}[view.name]||vHome;
   $('#app').innerHTML=f();afterRender()}
 function afterRender(){const a=$('#app [autofocus]');if(a)a.focus({preventScroll:true})}
