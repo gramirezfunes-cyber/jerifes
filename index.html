@@ -120,6 +120,7 @@ td.c{text-align:center}
 .lv.m{background:var(--ok);border-color:var(--ok)}.lv.p{background:var(--sun);border-color:var(--sun)}.lv.x{background:var(--alBg);border-color:var(--al)}
 .wd{font-family:Andika,sans-serif;font-size:1.1rem}
 .scroll{overflow-x:auto}
+.report{white-space:pre-wrap;font:inherit;font-size:.95rem;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:14px 0;max-height:360px;overflow:auto}
 details{border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:8px 0;background:var(--bg)}
 summary{cursor:pointer;font-weight:500}
 .empty{text-align:center;padding:36px 20px}
@@ -160,8 +161,8 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const norm=s=>String(s||'').toLowerCase().replace(/[’`]/g,"'").replace(/[^a-z' -]/g,'').replace(/\s+/g,' ').trim();
-const today=()=>new Date().toISOString().slice(0,10);
 const dayKey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const today=()=>dayKey(Date.now());
 const fmtDate=t=>new Date(t).toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'});
 const fmtDay=s=>{if(!s)return'';const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('es',{day:'numeric',month:'long',year:'numeric'})};
 function lev(a,b){const D=[];for(let i=0;i<=a.length;i++){D[i]=[i];for(let j=1;j<=b.length;j++)D[i][j]=i?Math.min(D[i-1][j]+1,D[i][j-1]+1,D[i-1][j-1]+(a[i-1]===b[j-1]?0:1)):j}return D[a.length][b.length]}
@@ -192,7 +193,9 @@ const ic=n=>`<svg viewBox="0 0 28 28" aria-hidden="true">${ICON[n]}</svg>`;
 
 /* ---------- datos ---------- */
 const LS='spellingCoach.v1';
-const DEF={name:'',perRound:5,rate:0.8,accent:'en-US',letterHints:true,sfx:true,calm:false,big:false,breaks:true,autoNext:false};
+const DEF={name:'',perRound:5,rate:0.8,accent:'en-US',letterHints:true,sfx:true,calm:false,big:false,breaks:true,autoNext:false,reportUrl:''};
+/* URL del Apps Script de Google Sheets para el reporte automático. Si se deja vacía, se puede poner en Ajustes. */
+const REPORT_URL='';
 let S={meta:{settings:{...DEF}},lists:{},sessions:{}};
 const set=()=>S.meta.settings;
 function loadLocal(){try{const r=localStorage.getItem(LS);if(r){const d=JSON.parse(r);S={meta:d.meta||{},lists:d.lists||{},sessions:d.sessions||{}}}}catch(e){}S.meta.settings={...DEF,...(S.meta.settings||{})}}
@@ -348,7 +351,34 @@ function rec(ok,ans){const k=R.item.w.w;let r=R.results[k];
   else r.tries++}
 function saveRun(done){const res=Object.values(R.results);if(!res.length)return;const L=S.lists[R.listId];
   const s={id:R.id,listId:R.listId,listTitle:L?L.title:'',mode:R.mode,hard:R.hard,startedAt:R.startedAt,endedAt:Date.now(),results:res,score:res.filter(r=>r.ok).length,total:res.length,done:!!done,updatedAt:Date.now()};
-  S.sessions[s.id]=s;putDoc('sessions/'+s.id,s)}
+  S.sessions[s.id]=s;putDoc('sessions/'+s.id,s);setTimeout(sendReports,300)}
+
+/* ---------- reportes ---------- */
+const reportUrl=()=>{const u=String(set().reportUrl||REPORT_URL||'').trim();return /^https:\/\/script\.google(usercontent)?\.com\//.test(u)?u:''};
+const actName=s=>s.hard?'Repaso':(SK[s.mode]?.t||s.mode);
+const payload=s=>({id:s.id,alumna:set().name||'',lista:s.listTitle||'',actividad:actName(s),fecha:new Date(s.startedAt).toISOString(),minutos:Math.max(1,Math.round((s.endedAt-s.startedAt)/60000)),puntaje:s.score,total:s.total,completa:!!s.done,palabras:(s.results||[]).map(r=>({w:r.w,ok:!!r.ok,tries:r.tries,ans:r.ans||'',hint:!!r.hint}))});
+const postReport=(url,body)=>fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+const pendingReports=()=>{const sent=S.meta.sent||{};return Object.values(S.sessions).filter(s=>sent[s.id]!==s.updatedAt)};
+let sending=false;
+async function sendReports(){const url=reportUrl();if(!url||sending||!navigator.onLine)return;sending=true;S.meta.sent=S.meta.sent||{};
+  for(const s of pendingReports().sort((a,b)=>a.startedAt-b.startedAt).slice(0,25)){try{await postReport(url,payload(s));S.meta.sent[s.id]=s.updatedAt;saveLocal()}catch(e){break}}
+  sending=false}
+window.addEventListener('online',()=>sendReports());
+function reportText(days){const now=Date.now(),from=new Date();from.setHours(0,0,0,0);from.setDate(from.getDate()-(days-1));
+  const ses=Object.values(S.sessions).filter(s=>s.startedAt>=from.getTime()).sort((a,b)=>a.startedAt-b.startedAt);
+  const name=set().name||'la estudiante';const f=d=>new Date(d).toLocaleDateString('es',{day:'numeric',month:'long'});
+  const L=[`📚 Reporte de Spelling Coach — ${name}`,`Del ${f(from)} al ${f(now)}`,''];
+  if(!ses.length){L.push('No hubo prácticas en este periodo.');return L.join('\n')}
+  const daySet=new Set(ses.map(s=>dayKey(s.startedAt)));const mins=ses.reduce((a,s)=>a+Math.max(1,Math.round((s.endedAt-s.startedAt)/60000)),0);
+  L.push(`• Días con práctica: ${daySet.size} de ${days}`,`• Prácticas: ${ses.length} (${(n=>n+(n===1?' completa':' completas'))(ses.filter(s=>s.done).length)}), aprox. ${mins} minuto${mins===1?'':'s'} en total`,`• Estrellas ganadas: ${ses.reduce((a,s)=>a+(s.score||0),0)}`,'','Aciertos al primer intento por actividad:');
+  const acts={};ses.forEach(s=>{const k=actName(s);acts[k]=acts[k]||{ok:0,n:0};acts[k].ok+=s.score||0;acts[k].n+=s.total||0});
+  [...ROUTE.map(k=>SK[k].t),'Repaso'].forEach(k=>{const a=acts[k];if(a&&a.n)L.push(`  - ${k}: ${Math.round(100*a.ok/a.n)}% (${a.ok} de ${a.n})`)});
+  const last={},spell={};ses.forEach(s=>(s.results||[]).forEach(r=>{const k=r.w.toLowerCase();last[k]={w:r.w,ok:r.ok};if(s.mode==='write'||s.mode==='test')spell[k]={w:r.w,ok:r.ok}}));
+  const hard=Object.values(last).filter(x=>!x.ok).map(x=>x.w),good=Object.values(spell).filter(x=>x.ok).map(x=>x.w);
+  L.push('');if(good.length)L.push(`✅ Ya las escribe bien (${good.length}): ${good.join(', ')}`);
+  L.push(hard.length?`🔁 Para seguir repasando (${hard.length}): ${hard.join(', ')}`:'🔁 No quedan palabras pendientes de repaso. ¡Excelente!');
+  const lists=[...new Set(ses.map(s=>s.listTitle).filter(Boolean))];if(lists.length)L.push('',`Listas practicadas: ${lists.join(' · ')}`);
+  return L.join('\n')}
 function next(){R.i++;if(R.i<R.cur.length)return enterItem();
   if(R.r<R.rounds.length-1){saveRun(false);if(set().breaks){view={name:'brk'};render();window.scrollTo(0,0);return}return nextRound()}
   saveRun(true);view={name:'done'};render();window.scrollTo(0,0);chime(true)}
@@ -420,6 +450,11 @@ function vProgress(){const ls=liveLists();const sel=view.id&&S.lists[view.id]?S.
   const lvl=o=>!o?'':o.last?'m':o.ok?'p':'x';
   return `<h1>Progreso</h1><p class="mut">Para revisar juntos. Verde = dominada · amarillo = practicando · naranja = para repasar · vacío = aún no practicada.</p>
   <div class="stats"><div class="stat"><b>${days}</b>días de práctica</div><div class="stat"><b>${streak()}</b>días seguidos</div><div class="stat"><b>${mastered}/${total}</b>palabras que ya escribe bien</div><div class="stat"><b>${stars()}</b>estrellas</div></div>
+  ${(()=>{const d=view.rdays||7,t=reportText(d),enc=encodeURIComponent(t);return `<h2>Reporte para enviar</h2><div class="card">
+   <div class="row" style="justify-content:space-between"><div style="flex:1 1 220px"><label for="rd" style="margin-top:0">Periodo</label><select id="rd" data-c="rdays" style="max-width:260px">${[[7,'Últimos 7 días'],[14,'Últimas 2 semanas'],[30,'Últimos 30 días']].map(([v,l])=>`<option value="${v}" ${v===d?'selected':''}>${l}</option>`).join('')}</select></div></div>
+   <pre class="report">${esc(t)}</pre>
+   <div class="row"><a class="btn" href="https://wa.me/?text=${enc}" target="_blank" rel="noopener">Enviar por WhatsApp</a><a class="btn soft" href="mailto:?subject=${encodeURIComponent('Reporte de Spelling Coach')}&body=${enc}">Enviar por correo</a>
+   ${navigator.share?`<button class="btn soft" data-a="shareReport">Compartir…</button>`:''}<button class="btn soft" data-a="copyReport">Copiar texto</button></div></div>`})()}
   ${sel?`<h2>Palabra por palabra</h2><label for="psel">Lista</label><select id="psel" data-c="psel" style="max-width:420px">${ls.map(L=>`<option value="${L.id}" ${L.id===sel.id?'selected':''}>${esc(L.title)}</option>`).join('')}</select>
   <div class="card" style="margin-top:14px"><table class="stack"><thead><tr><th>Palabra</th>${ROUTE.map(k=>`<th class="c">${SK[k].t}</th>`).join('')}</tr></thead><tbody>
   ${(()=>{const st=wordStats(sel.id);return sel.words.map(w=>{const o=st[w.w.toLowerCase()]||{};return `<tr><td class="wd">${esc(w.w)}</td>${ROUTE.map(k=>`<td class="c"><span class="lv ${lvl(o[k])}" title="${o[k]?o[k].ok+' de '+o[k].n+' bien':'sin practicar'}"></span></td>`).join('')}</tr>`}).join('')})()}</tbody></table></div>`:''}
@@ -439,6 +474,11 @@ function vSettings(){const s=set();const sw=(k,t,d)=>`<label class="switch"><inp
   ${sw('sfx','Sonidos suaves al acertar')}
   ${sw('calm','Modo calma','Sin animaciones.')}
   ${sw('big','Letra más grande')}</div></div>
+  <h2>Reporte automático a Google Sheets</h2><div class="card"><p>Cada práctica que termine se envía sola a tu hoja de Google, para que la revises desde tu celular.</p>
+  <label for="ru">URL de la aplicación web de Apps Script <span class="hint">(empieza con https://script.google.com/…)</span></label>
+  <input type="text" id="ru" data-c="set" data-k="reportUrl" value="${esc(s.reportUrl)}" placeholder="${REPORT_URL?'Ya configurada en la plataforma':'https://script.google.com/macros/s/…/exec'}" autocomplete="off" spellcheck="false">
+  <p class="mut" style="margin-top:10px">${reportUrl()?`Activo · ${pendingReports().length} práctica(s) por enviar`:'Inactivo · pega la URL para activarlo'}</p>
+  <div class="row"><button class="btn soft" data-a="testReport">Enviar fila de prueba</button><button class="btn soft" data-a="sendNow">Enviar pendientes ahora</button></div></div>
   <h2>Copia de seguridad</h2><div class="card"><p>Dónde se guarda: <b id="where">${db?'en la nube de Claude, sincronizado entre dispositivos':'en este navegador'}</b>. Descarga una copia de vez en cuando para no perder nada.</p>
   <div class="row"><button class="btn" data-a="export">Descargar copia (.json)</button><button class="btn soft" data-a="copyExport">Copiar datos</button>
   <label class="btn soft" style="margin:0">Restaurar desde archivo<input type="file" accept=".json,application/json" data-c="import" class="sr"></label></div>
@@ -487,6 +527,11 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   case'cont':nextRound();break;
   case'finish':saveRun(false);view={name:'done'};render();break;
   case'stop':saveRun(false);go(R&&S.lists[R.listId]?'list':'home',{id:R&&R.listId});break;
+  case'copyReport':navigator.clipboard.writeText(reportText(view.rdays||7)).then(()=>toast('Reporte copiado'),()=>toast('No se pudo copiar'));break;
+  case'shareReport':navigator.share({title:'Reporte de Spelling Coach',text:reportText(view.rdays||7)}).catch(()=>{});break;
+  case'testReport':{const u=reportUrl();if(!u){toast('Primero pega la URL de Apps Script');break}
+    postReport(u,{id:'prueba-'+uid(),alumna:'PRUEBA (puedes borrar esta fila)',lista:'Prueba',actividad:'Prueba',fecha:new Date().toISOString(),minutos:1,puntaje:1,total:1,completa:true,palabras:[{w:'test',ok:true,tries:1,ans:'test',hint:false}]}).then(()=>toast('Enviada. Revisa tu hoja de Google en unos segundos.'),()=>toast('No se pudo enviar. Revisa la URL y tu conexión.'));break}
+  case'sendNow':if(!reportUrl()){toast('Primero pega la URL de Apps Script');break}sendReports().then(()=>{toast('Envío terminado');render()});break;
   case'export':doExport();break;
   case'copyExport':navigator.clipboard.writeText(exportJson()).then(()=>toast('Datos copiados. Pégalos en un documento para guardarlos.'),()=>toast('No se pudo copiar'));break;
   case'importText':importData($('#imp').value);break;
@@ -508,10 +553,11 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.dataset.c==='set'&&t.type==='text'){set()[t.dataset.k]=t.value;clearTimeout(t._t);t._t=setTimeout(saveMeta,600)}});
 document.addEventListener('change',e=>{const t=e.target;
   if(t.dataset.c==='set'&&t.type!=='text'){const k=t.dataset.k;set()[k]=t.type==='checkbox'?t.checked:(k==='accent'?t.value:+t.value);saveMeta();applyLook();toast('Guardado')}
-  if(t.dataset.c==='psel')go('progress',{id:t.value});
+  if(t.dataset.c==='psel')go('progress',{id:t.value,rdays:view.rdays});
+  if(t.dataset.c==='rdays'){view.rdays=+t.value;render()}
   if(t.dataset.c==='import'&&t.files[0]){t.files[0].text().then(importData)}});
 
-loadLocal();applyLook();render();initCloud();initVoice();
+loadLocal();applyLook();render();initCloud();initVoice();setTimeout(sendReports,1500);
 }
 </script>
 </body>

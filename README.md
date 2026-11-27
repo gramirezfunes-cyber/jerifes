@@ -16,7 +16,7 @@ Se ingresa la lista de palabras de la semana (o del día) y la plataforma entren
 | 4 | **Pronunciar** (Speaking) | Escucha el modelo y la dice al micrófono; la plataforma comprueba si se entendió. |
 | 5 | **Ensayo de examen** | Dictado de toda la lista, sin pistas, como en clase. |
 
-Además: **Palabras para repasar** (las que costaron), **Progreso** palabra por palabra, **historial** completo de prácticas y **copia de seguridad**.
+Además: **Palabras para repasar** (las que costaron), **Progreso** palabra por palabra, **historial** completo de prácticas, **reportes** (WhatsApp, correo y Google Sheets) y **copia de seguridad**.
 
 ## Diseño pensado para TDAH y TEA nivel 1
 
@@ -35,6 +35,25 @@ Además: **Palabras para repasar** (las que costaron), **Progreso** palabra por 
 - Si se abre como artifact de Claude, además se guarda en la nube y se sincroniza entre dispositivos.
 
 > Consejo: usa siempre el mismo dispositivo y navegador (Chrome o Edge), o descarga una copia de seguridad cada semana.
+
+## Reportes para papá o mamá
+
+**1. Reporte para enviar (sin configurar nada).** En **Progreso → Reporte para enviar** se arma un resumen del periodo que elijas (7, 14 o 30 días): días con práctica, aciertos por actividad, palabras que ya escribe bien y palabras para repasar. Se envía con un toque por **WhatsApp** o **correo**, o se copia.
+
+**2. Reporte automático en Google Sheets.** Cada práctica se envía sola a una hoja de Google con tres pestañas:
+- **Resumen**: últimos 7 días, % de acierto por actividad y palabras que más le cuestan.
+- **Prácticas**: una fila por práctica.
+- **Detalle por palabra**: qué escribió en cada palabra y si la acertó al primer intento.
+
+Configuración (una sola vez, unos 5 minutos):
+1. Abre la hoja de Google para los reportes → **Extensiones → Apps Script**.
+2. Borra lo que haya, pega el contenido de [`google-apps-script/Codigo.gs`](google-apps-script/Codigo.gs) y guarda.
+3. **Implementar → Nueva implementación →** tipo **Aplicación web**. *Ejecutar como:* Yo. *Quién tiene acceso:* Cualquier usuario. Autoriza los permisos.
+4. Copia la **URL de la aplicación web** (termina en `/exec`).
+5. Pégala en la plataforma en **Ajustes → Reporte automático a Google Sheets**, o fíjala en `index.html` en la constante `REPORT_URL` para que funcione en cualquier dispositivo sin configurarlo.
+6. Pulsa **Enviar fila de prueba** y revisa la hoja.
+
+Las prácticas hechas sin internet se envían solas cuando vuelve la conexión.
 
 ## Publicar en GitHub Pages (5 minutos)
 
